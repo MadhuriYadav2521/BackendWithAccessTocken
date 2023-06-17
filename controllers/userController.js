@@ -27,12 +27,48 @@ export const register = async (req, res) => {
 
         setTimeout(async () => {
             await Users.updateOne({ _id: user._id }, { $unset: { access_token: 1 } });
-        }, 4 * 60 * 60 * 1000);
+        },60 * 1000);
      
     
         // res.json({ access_token: accessToken });
         await user.save();
         return res.send("Resgistration Succesfull!")
+
+    } catch (error) {
+        return res.send(error)
+    }
+}
+
+export const regenerateTocken = async (req, res) => {
+    try {
+        const { email, password} = req.body;
+        const user = await Users.find({ email }).exec();
+        var secretkey = 'ios';
+        // var plaintext = password;
+        // var cipherText = encrypt.encrypt(user[0].password, secretkey, 256);
+        var decipherPin = encrypt.decrypt(user[0].password, secretkey, 256);
+        let random = "";
+        const characters = 'ABCDEFGHIJKJLMNOPQRSTUVWXYZabcdeghijklmnopqrstuvwxyz1234567890';
+        const charLength = characters.length;
+        let length = 100;
+        for(var i=0; i<length; i++){
+            random += characters.charAt(Math.floor(Math.random() * charLength));
+        }
+        const accessToken = random
+        if (decipherPin == password) {
+
+            if (user[0].access_token) {
+                return res.send("Tocken is already generated.")
+            } else {
+                await Users.findOneAndUpdate({ email }, { access_token: accessToken });
+                setTimeout(async () => {
+                    await Users.updateOne({ email }, { $unset: { access_token: 1 } });
+                }, 60 * 1000);
+                return res.send("Key is generated.")
+            }
+        } else {
+            return res.send("Credentials not matched.")
+        }
 
     } catch (error) {
         return res.send(error)
