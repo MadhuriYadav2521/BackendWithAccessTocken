@@ -1,9 +1,10 @@
 import Users from "../modals/userModel.js";
 import encrypt from "encryptjs";
 
+
 export const register = async (req, res) => {
     try {
-        const { name, email, password} = req.body;
+        const { name, email, password } = req.body;
 
         var secretkey = 'ios';
         var plaintext = password;
@@ -12,7 +13,7 @@ export const register = async (req, res) => {
         const characters = 'ABCDEFGHIJKJLMNOPQRSTUVWXYZabcdeghijklmnopqrstuvwxyz1234567890';
         const charLength = characters.length;
         let length = 100;
-        for(var i=0; i<length; i++){
+        for (var i = 0; i < length; i++) {
             random += characters.charAt(Math.floor(Math.random() * charLength));
         }
         const accessToken = random
@@ -27,9 +28,9 @@ export const register = async (req, res) => {
 
         setTimeout(async () => {
             await Users.updateOne({ _id: user._id }, { $unset: { access_token: 1 } });
-        },60 * 1000);
-     
-    
+        }, 60 * 1000);
+
+
         // res.json({ access_token: accessToken });
         await user.save();
         return res.send("Resgistration Succesfull!")
@@ -41,7 +42,9 @@ export const register = async (req, res) => {
 
 export const regenerateTocken = async (req, res) => {
     try {
-        const { email, password} = req.body;
+        const { email, password } = req.body;
+        if (!email) return res.send("email is requierd! in middleware");
+        if (!password) return res.send("password is requierd! in middleware");
         const user = await Users.find({ email }).exec();
         var secretkey = 'ios';
         // var plaintext = password;
@@ -51,7 +54,7 @@ export const regenerateTocken = async (req, res) => {
         const characters = 'ABCDEFGHIJKJLMNOPQRSTUVWXYZabcdeghijklmnopqrstuvwxyz1234567890';
         const charLength = characters.length;
         let length = 100;
-        for(var i=0; i<length; i++){
+        for (var i = 0; i < length; i++) {
             random += characters.charAt(Math.floor(Math.random() * charLength));
         }
         const accessToken = random
@@ -66,6 +69,36 @@ export const regenerateTocken = async (req, res) => {
                 }, 60 * 1000);
                 return res.send("Key is generated.")
             }
+        } else {
+            return res.send("Credentials not matched.")
+        }
+
+    } catch (error) {
+        return res.send(error)
+    }
+}
+
+
+export const getMediaFromYouTube = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        if (!email) return res.send("email is requierd! in middleware");
+        if (!password) return res.send("password is requierd! in middleware");
+        const user = await Users.find({ email }).exec();
+        var secretkey = 'ios';
+
+        var decipherPassword = encrypt.decrypt(user[0].password, secretkey, 256);
+
+        if (decipherPassword == password) {
+            const key = "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"
+            const response = await axios.get(
+                `https://youtube.googleapis.com/youtube/v3/playlists?channelId=UCVrltBg6F6xYutFRmJq8Mbw&key=${key}`
+            );
+
+            let result = response.items
+            return res.send(result.toString());
+            // https://youtube.googleapis.com/youtube/v3/playlists?channelId=UCVrltBg6F6xYutFRmJq8Mbw&key=[YOUR_API_KEY] 
+
         } else {
             return res.send("Credentials not matched.")
         }
