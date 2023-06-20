@@ -79,7 +79,7 @@ export const regenerateTocken = async (req, res) => {
 }
 
 
-export const getMediaFromYouTube = async (req, res) => {
+export const getMediaFromYouTube = async (req, res) => {       // not working
     try {
         const { email, password } = req.body;
         if (!email) return res.send("email is requierd! in middleware");
@@ -98,7 +98,7 @@ export const getMediaFromYouTube = async (req, res) => {
             let result = response.items
             return res.send(result.toString());
             // https://youtube.googleapis.com/youtube/v3/playlists?channelId=UCVrltBg6F6xYutFRmJq8Mbw&key=[YOUR_API_KEY] 
-
+             
         } else {
             return res.send("Credentials not matched.")
         }
